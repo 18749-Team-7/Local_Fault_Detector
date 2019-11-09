@@ -8,7 +8,7 @@ import socket
 
 class LocalFaultDetector:
 
-    def __init__(self, gfd_address=('localhost',10001), gfd_hb_interval=0.1, lfd_port=10000):
+    def __init__(self, gfd_address=('localhost',12345), gfd_hb_interval=0.1, lfd_port=10000):
         self.replica_thread = threading.Thread(target=self.replica_thread_func)
         self.gfd_heartbeat_thread = threading.Thread(target=self.gfd_heartbeat_thread_func)
         self.gfd_membership_thread = threading.Thread(target=self.gfd_membership_thread_func)
@@ -18,7 +18,7 @@ class LocalFaultDetector:
         self.replica_isAlive = False
         self.replica_isAlive_lock = threading.Lock()
 
-        self.rp_membership = "Membership json file"
+        self.rp_membership = "" # init as empty string
         self.rp_membership_lock = threading.Lock()
 
         self.establish_gfd_connection()
@@ -40,6 +40,7 @@ class LocalFaultDetector:
             print('Starting connecting on gfd_address{} port {}'.format(*server_address))
             self.gfd_conn.connect(server_address)
         except Exception as e:
+            print("Cannot connect to GFD")
             print(e)
 
 
@@ -74,7 +75,8 @@ class LocalFaultDetector:
                     data = self.gfd_conn.recv(1024)
                     with self.rp_membership_lock:
                         #Membership update here
-                        pass
+                        self.rp_membership = data
+                
                     print('received membership msg:{!r}'.format(data))
 
             finally:
@@ -123,7 +125,7 @@ class LocalFaultDetector:
                         print("Sending membership json file to replica server")
                         with self.rp_membership_lock:
                             membership_json = self.rp_membership
-                            membership_json = b"This is a member ship json file"
+                            #membership_json = b"This is a member ship json file"
                         connection.sendall(membership_json)
                     else:
                         print('no data from', client_address)
