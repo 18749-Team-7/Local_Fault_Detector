@@ -8,7 +8,7 @@ import socket
 
 class LocalFaultDetector:
 
-    def __init__(self, gfd_address=('localhost',12345), gfd_hb_interval=0.1, lfd_port=10000):
+    def __init__(self, gfd_address=('localhost',12345), gfd_hb_interval=1, lfd_port=10000):
         self.replica_thread = threading.Thread(target=self.replica_thread_func)
         self.gfd_heartbeat_thread = threading.Thread(target=self.gfd_heartbeat_thread_func)
         self.gfd_membership_thread = threading.Thread(target=self.gfd_membership_thread_func)
@@ -18,17 +18,18 @@ class LocalFaultDetector:
         self.replica_isAlive = False
         self.replica_isAlive_lock = threading.Lock()
 
-        self.rp_membership = "" # init as empty string
+        self.rp_membership = json.dumps({}).encode("UTF-8") # init as empty string
         self.rp_membership_lock = threading.Lock()
 
         self.establish_gfd_connection()
         
         print("Replica thread start")
         self.replica_thread.start()
+        time.sleep(5)
         print("GFD heartbeat thread start")
         self.gfd_heartbeat_thread.start()
-        print("GFD membership thread start")
-        self.gfd_membership_thread.start()
+        #print("GFD membership thread start")
+        #self.gfd_membership_thread.start()
     
     def establish_gfd_connection(self):
         try:
@@ -129,6 +130,10 @@ class LocalFaultDetector:
                         connection.sendall(membership_json)
                     else:
                         print('no data from', client_address)
+                        with self.replica_isAlive_lock:
+                            self.replica_isAlive = False
+                            print("replica connection lost")
+                        connection.close()
                         break
 
             except Exception as e:
