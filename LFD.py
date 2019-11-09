@@ -4,6 +4,7 @@ import sys
 import json
 import threading
 import time
+import socket
 
 class LocalFaultDetector:
 
@@ -48,7 +49,13 @@ class LocalFaultDetector:
             try:
                 # Waiting for GFD membership data
                 while True:
-                    LFD_heartbeat_msg = b"This is a LFD_heartbeat json str"
+                    ip_addr = socket.gethostbyname(socket.gethostname())
+                    data = {}
+                    data['server_ip'] = ip_addr
+                    with self.replica_isAlive_lock:
+                        data['status'] = self.replica_isAlive
+                    
+                    LFD_heartbeat_msg = json.dumps(data).encode("UTF-8")
                     self.gfd_conn.sendall(LFD_heartbeat_msg)
                     time.sleep(self.gfd_hb_interval)
 
