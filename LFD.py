@@ -118,7 +118,7 @@ class LocalFaultDetector:
                         connection.close()
                         break
                     
-                    print('received heartbeat msg:{!r} | count: {}'.format(data, count))
+                    print('Received heartbeat from Replica at: {} | Heartbeat count: {}'.format(client_address, count))
                     count = count + 1
                     with self.replica_isAlive_lock:
                         self.replica_isAlive = True
