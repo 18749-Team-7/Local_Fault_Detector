@@ -103,6 +103,7 @@ class LocalFaultDetector:
             connection, client_address = sock.accept()
             try:
                 print('connection from', client_address)
+                count = 0
 
                 # Waiting for replica heart beat
                 while True:
@@ -117,17 +118,20 @@ class LocalFaultDetector:
                         connection.close()
                         break
                     
-                    print('received heartbeat msg:{!r}'.format(data))
+                    print('received heartbeat msg:{!r} | count: {}'.format(data, count))
+                    count = count + 1
                     with self.replica_isAlive_lock:
                         self.replica_isAlive = True
 
                     if data:
+                        pass
+                        # TODO: Send membership data to replica
                         # Dummy membership json data
-                        print("Sending membership json file to replica server")
-                        with self.rp_membership_lock:
-                            membership_json = self.rp_membership
-                            #membership_json = b"This is a member ship json file"
-                        connection.sendall(membership_json)
+                        # print("Sending membership json file to replica server")
+                        # with self.rp_membership_lock:
+                        #     membership_json = self.rp_membership
+                        #     #membership_json = b"This is a member ship json file"
+                        # connection.sendall(membership_json)
                     else:
                         print('no data from', client_address)
                         with self.replica_isAlive_lock:
