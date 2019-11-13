@@ -22,7 +22,6 @@ class LocalFaultDetector:
     def __init__(self, gfd_address, gfd_hb_interval=1, lfd_port=10000):
         self.replica_thread = threading.Thread(target=self.replica_thread_func)
         self.gfd_heartbeat_thread = threading.Thread(target=self.gfd_heartbeat_thread_func)
-        self.gfd_membership_thread = threading.Thread(target=self.gfd_membership_thread_func)
         self.lfd_port = lfd_port
         self.gfd_address = (gfd_address, 12345)
         self.gfd_hb_interval = gfd_hb_interval
@@ -47,8 +46,6 @@ class LocalFaultDetector:
         time.sleep(5)
         print("GFD heartbeat thread start")
         self.gfd_heartbeat_thread.start()
-        #print("GFD membership thread start")
-        #self.gfd_membership_thread.start()
     
     def establish_gfd_connection(self):
         try:
@@ -57,10 +54,10 @@ class LocalFaultDetector:
 
             # Bind the socket to the replication port
             server_address = self.gfd_address
-            print('Connecting to gfd_address {} port {}'.format(*server_address))
+            print(RED + 'Connecting to gfd_address {} port {}'.format(*server_address) + RESET)
             self.gfd_conn.connect(server_address)
         except Exception as e:
-            print("Cannot connect to GFD")
+            print(RED + "Cannot connect to GFD" + RESET)
             print(e)
 
 
@@ -82,26 +79,7 @@ class LocalFaultDetector:
 
             finally:
                 # GFD connection errors
-                print("gfd connection lost")
-                # Clean up the connection
-                self.gfd_conn.close()
-
-    def gfd_membership_thread_func(self):
-        
-        while True:
-            try:
-                # Waiting for replica heart beat
-                while True:
-                    data = self.gfd_conn.recv(1024)
-                    with self.rp_membership_lock:
-                        #Membership update here
-                        self.rp_membership = data
-                
-                    print('received membership msg:{!r}'.format(data))
-
-            finally:
-                # GFD connection errors
-                print("gfd connection lost")
+                print(RED + "gfd connection lost" + RESET)
                 # Clean up the connection
                 self.gfd_conn.close()
 
@@ -115,16 +93,16 @@ class LocalFaultDetector:
         # host_ip = socket.gethostbyname(host_name)
 
         server_address = (self.host_ip, self.lfd_port)
-        print('Starting listening on replica {} port {}'.format(*server_address))
+        print(RED + 'Starting listening on replica {} port {}'.format(*server_address) + RESET)
         sock.bind(server_address)
         
         # Listen for incoming connections
         sock.listen(1)
         while True:
-            print("Accepting replica")
+            print(RED + "Waiting for replica to connect" + RESET)
             connection, self.client_address = sock.accept()
             try:
-                print('connection from', self.client_address)
+                print(RED + 'connection from {}'.format(self.client_address) + RESET)
                 count = 0
 
                 # Waiting for replica heart beat
@@ -140,31 +118,24 @@ class LocalFaultDetector:
                         connection.close()
                         break
                     
-                    print('Received heartbeat from Replica at: {} | Heartbeat count: {}'.format(self.client_address, count))
+                    print(BLUE + 'Received heartbeat from Replica at: {} | Heartbeat count: {}'.format(self.client_address, count) + RESET)
                     count = count + 1
                     with self.replica_isAlive_lock:
                         self.replica_isAlive = True
 
                     if data:
                         pass
-                        # TODO: Send membership data to replica
-                        # Dummy membership json data
-                        # print("Sending membership json file to replica server")
-                        # with self.rp_membership_lock:
-                        #     membership_json = self.rp_membership
-                        #     #membership_json = b"This is a member ship json file"
-                        # connection.sendall(membership_json)
                     else:
-                        print('no data from', self.client_address)
+                        print(RED + 'no data from {}'.format(self.client_address) + RESET)
                         with self.replica_isAlive_lock:
                             self.replica_isAlive = False
-                            print("replica connection lost")
+                            print(RED + "replica connection lost" + RESET)
                         connection.close()
                         break
 
             except Exception as e:
                 # Anything fails, ie: replica server fails
-                print("Replica connection lost")
+                print(RED + "Replica connection lost" + RESET)
                 # Clean up the connection
                 connection.close()
 
