@@ -41,10 +41,9 @@ class LocalFaultDetector:
 
         self.establish_gfd_connection()
         
-        print("Replica thread start")
         self.replica_thread.start()
         time.sleep(5)
-        print("GFD heartbeat thread start")
+        print(RED + "Starting GFD heartbeat..." + RESET)
         self.gfd_heartbeat_thread.start()
     
     def establish_gfd_connection(self):
@@ -79,7 +78,7 @@ class LocalFaultDetector:
 
             finally:
                 # GFD connection errors
-                print(RED + "gfd connection lost" + RESET)
+                print(RED + "GFD connection is lost" + RESET)
                 # Clean up the connection
                 self.gfd_conn.close()
 
@@ -112,7 +111,7 @@ class LocalFaultDetector:
                         data = connection.recv(1024)
                         connection.settimeout(None)
                     except socket.timeout:
-                        print("Receive timeout")
+                        print(RED + "Received timeout from Replica {}".format(self.client_address))
                         with self.replica_isAlive_lock:
                             self.replica_isAlive = False
                         connection.close()
