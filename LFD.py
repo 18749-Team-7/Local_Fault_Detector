@@ -31,6 +31,7 @@ class LocalFaultDetector:
         
 
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.connect(("8.8.8.8", 80))
         self.host_ip = s.getsockname()[0]
 
@@ -50,6 +51,7 @@ class LocalFaultDetector:
         try:
             # Create a TCP/IP socket
             self.gfd_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.gfd_conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
             # Bind the socket to the replication port
             server_address = self.gfd_address
@@ -86,6 +88,7 @@ class LocalFaultDetector:
     def replica_thread_func(self):
         # Create a TCP/IP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # Bind the socket to the replication port
         # host_name = socket.gethostname() 
