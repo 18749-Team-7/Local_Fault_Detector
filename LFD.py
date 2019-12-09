@@ -143,7 +143,7 @@ def get_args():
 
     # IP, PORT, Username
     parser.add_argument('-ip', '--ip', help="Global fault detector IP Address", required=True)
-    
+    parser.add_argument('-hbf', '--hb_freq', help=“Heartbeat Frequency”, type=int, default=1)
     # Parse the arguments
     args = parser.parse_args()
     return args
@@ -152,5 +152,6 @@ if __name__=="__main__":
     # Extract Arguments from the 
     args = get_args()
 
-    lfd = LocalFaultDetector(gfd_address=args.ip)
+    lfd = LocalFaultDetector(gfd_address=args.ip, gfd_hb_interval=args.hb_freq)
+
 
