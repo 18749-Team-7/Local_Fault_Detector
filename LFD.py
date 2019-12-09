@@ -107,7 +107,8 @@ class LocalFaultDetector:
                 # Waiting for replica heart beat
                 while True:
                     try:
-                        connection.settimeout(2)
+                        timeout = int(self.gfd_hb_interval + 2)
+                        connection.settimeout(timeout)
                         data = connection.recv(1024)
                         connection.settimeout(None)
                     except socket.timeout:
