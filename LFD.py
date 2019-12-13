@@ -19,12 +19,12 @@ RESET =     "\u001b[0m"
 
 class LocalFaultDetector:
 
-    def __init__(self, gfd_address, gfd_hb_interval=1, lfd_port=10000):
+    def __init__(self, gfd_address):
         self.replica_thread = threading.Thread(target=self.replica_thread_func)
         self.gfd_heartbeat_thread = threading.Thread(target=self.gfd_heartbeat_thread_func)
         self.lfd_port = lfd_port
         self.gfd_address = (gfd_address, 12345)
-        self.gfd_hb_interval = gfd_hb_interval
+        self.gfd_hb_interval = 1
         self.replica_isAlive = False
         self.replica_isAlive_lock = threading.Lock()
 
@@ -73,6 +73,7 @@ class LocalFaultDetector:
                     data['server_ip'] = ip_addr
                     with self.replica_isAlive_lock:
                         data['status'] = self.replica_isAlive
+                    data['time'] = self.gfd_hb_interval
                     
                     LFD_heartbeat_msg = json.dumps(data).encode("UTF-8")
                     self.gfd_conn.sendall(LFD_heartbeat_msg)
@@ -110,9 +111,10 @@ class LocalFaultDetector:
                 # Waiting for replica heart beat
                 while True:
                     try:
-                        connection.settimeout(5)
+                        # connection.settimeout(5)
                         data = connection.recv(1024)
-                        connection.settimeout(None)
+                        # connection.settimeout(None)
+
                     except socket.timeout:
                         print(RED + "Received timeout from Replica {}".format(self.client_address))
                         with self.replica_isAlive_lock:
@@ -126,7 +128,9 @@ class LocalFaultDetector:
                         self.replica_isAlive = True
 
                     if data:
-                        pass
+                        data = data.decode("utf-8")
+                        data = json.loads(data)
+                        self.gfd_hb_interval = data["time"]
                     else:
                         print(RED + 'No data from {}'.format(self.client_address) + RESET)
                         with self.replica_isAlive_lock:
