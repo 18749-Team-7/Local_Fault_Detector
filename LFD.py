@@ -110,15 +110,15 @@ class LocalFaultDetector:
                 # Waiting for replica heart beat
                 while True:
                     try:
-                        connection.settimeout(2)
+                        connection.settimeout(5)
                         data = connection.recv(1024)
                         connection.settimeout(None)
                     except socket.timeout:
                         print(RED + "Received timeout from Replica {}".format(self.client_address))
                         with self.replica_isAlive_lock:
                             self.replica_isAlive = False
-                        connection.close()
-                        break
+                        # connection.close()
+                        continue
                     
                     print(BLUE + 'Received heartbeat from Replica at: {} | Heartbeat count: {}'.format(self.client_address, count) + RESET)
                     count = count + 1
@@ -128,7 +128,7 @@ class LocalFaultDetector:
                     if data:
                         pass
                     else:
-                        print(RED + 'no data from {}'.format(self.client_address) + RESET)
+                        print(RED + 'No data from {}'.format(self.client_address) + RESET)
                         with self.replica_isAlive_lock:
                             self.replica_isAlive = False
                             print(RED + "replica connection lost" + RESET)
