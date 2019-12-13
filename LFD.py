@@ -131,7 +131,8 @@ class LocalFaultDetector:
                     if data:
                         data = data.decode("utf-8")
                         data = json.loads(data)
-                        self.gfd_hb_interval = data["time"]
+                        if "time" in data:
+                            self.gfd_hb_interval = data["time"]
                     else:
                         print(RED + 'No data from {}'.format(self.client_address) + RESET)
                         with self.replica_isAlive_lock:
