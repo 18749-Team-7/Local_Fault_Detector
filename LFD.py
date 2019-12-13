@@ -24,7 +24,7 @@ class LocalFaultDetector:
         self.gfd_heartbeat_thread = threading.Thread(target=self.gfd_heartbeat_thread_func)
         self.lfd_port = 10000
         self.gfd_address = (gfd_address, 12345)
-        self.gfd_hb_interval = 1
+        self.gfd_hb_interval = 5
         self.replica_isAlive = False
         self.replica_isAlive_lock = threading.Lock()
 
