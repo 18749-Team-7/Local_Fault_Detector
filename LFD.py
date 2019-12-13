@@ -24,7 +24,7 @@ class LocalFaultDetector:
         self.gfd_heartbeat_thread = threading.Thread(target=self.gfd_heartbeat_thread_func)
         self.lfd_port = 10000
         self.gfd_address = (gfd_address, 12345)
-        self.gfd_hb_interval = 5
+        self.gfd_hb_interval = 1
         self.replica_isAlive = False
         self.replica_isAlive_lock = threading.Lock()
 
@@ -73,11 +73,11 @@ class LocalFaultDetector:
                     data['server_ip'] = ip_addr
                     with self.replica_isAlive_lock:
                         data['status'] = self.replica_isAlive
-                    data['time'] = self.gfd_hb_interval
+                    # data['time'] = self.gfd_hb_interval
                     
                     LFD_heartbeat_msg = json.dumps(data).encode("UTF-8")
                     self.gfd_conn.sendall(LFD_heartbeat_msg)
-                    time.sleep(self.gfd_hb_interval)
+                    time.sleep(1)
 
             finally:
                 # GFD connection errors
@@ -118,6 +118,7 @@ class LocalFaultDetector:
                     except socket.timeout:
                         print(RED + "Received timeout from Replica {}".format(self.client_address))
                         with self.replica_isAlive_lock:
+                            time.sleep(self.gfd_hb_interval)
                             self.replica_isAlive = False
                         # connection.close()
                         continue
@@ -134,6 +135,7 @@ class LocalFaultDetector:
                     else:
                         print(RED + 'No data from {}'.format(self.client_address) + RESET)
                         with self.replica_isAlive_lock:
+                            time.sleep(self.gfd_hb_interval)
                             self.replica_isAlive = False
                             print(RED + "replica connection lost" + RESET)
                         connection.close()
